@@ -73,11 +73,11 @@
 (def all-screens
   {:login                                            login/login
    :progress                                         progress/progress
-   :recover-multiaccount-enter-phrase                multiaccounts.recover/enter-phrase
-   :recover-multiaccount-select-storage              multiaccounts.recover/select-storage
-   :recover-multiaccount-enter-password              multiaccounts.recover/enter-password
-   :recover-multiaccount-confirm-password            multiaccounts.recover/confirm-password
-   :recover-multiaccount-success                     multiaccounts.recover/success
+   :recover-multiaccount-enter-phrase                intro/wizard ;multiaccounts.recover/enter-phrase
+   :recover-multiaccount-success                     intro/wizard ;multiaccounts.recover/success
+   :recover-multiaccount-select-storage              intro/wizard ;multiaccounts.recover/select-storage
+   :recover-multiaccount-enter-password              intro/wizard ;multiaccounts.recover/enter-password
+   :recover-multiaccount-confirm-password            intro/wizard ;multiaccounts.recover/confirm-password
    :multiaccounts                                    multiaccounts/multiaccounts
    :intro                                            intro/intro
    :intro-wizard                                     intro/wizard

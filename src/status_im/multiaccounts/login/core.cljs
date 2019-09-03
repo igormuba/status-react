@@ -213,7 +213,6 @@
                                              :mailserver-ranges {}
                                              :mailserver-topics {}
                                              :default-mailserver true})
-              (mobile-network/on-network-status-change)
               (chaos-mode/check-chaos-mode)
               (when-not platform/desktop?
                 (initialize-wallet)))))

@@ -397,7 +397,6 @@
     :create-pin-description
     :group-chat-member-joined
     :start-chat
-    :intro-wizard-title7
     :browsed-websites
     :mobile-network-sheet-offline
     :blank-keycard-title

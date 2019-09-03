@@ -175,7 +175,7 @@
 (reg-root-key-sub :signing/edit-fee :signing/edit-fee)
 
 ;;intro-wizard
-(reg-root-key-sub :intro-wizard :intro-wizard)
+(reg-root-key-sub :intro-wizard-state :intro-wizard)
 
 (reg-root-key-sub :popover/popover :popover/popover)
 (reg-root-key-sub :generate-account :generate-account)
@@ -189,6 +189,13 @@
  :<- [:desktop/desktop]
  (fn [desktop _]
    (get desktop :debug-metrics)))
+
+(re-frame/reg-sub
+ :intro-wizard
+ :<- [:intro-wizard-state]
+ :<- [:dimensions/window]
+ (fn [[wizard-state {:keys [width height] :as dimensions}]]
+   (assoc wizard-state :view-height height :view-width width)))
 
 (re-frame/reg-sub
  :settings/logging-enabled

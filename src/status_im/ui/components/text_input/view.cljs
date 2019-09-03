@@ -14,8 +14,11 @@
       (dissoc merged-styles :background-color)
       merged-styles)))
 
-(defn text-input-with-label [{:keys [label content error style height container text editable] :as props :or {editable true}}]
-  [react/view
+(defn text-input-with-label [{:keys [label content error style height container
+                                     bottom-value
+                                     parent-container text editable] :as props :or {editable true}}]
+  [react/view (when parent-container
+                parent-container)
    (when label
      [react/text {:style (styles/label editable)}
       label])
@@ -33,4 +36,7 @@
         {:value text}))]
     (when content content)]
    (when error
-     [tooltip/tooltip error (styles/error label)])])
+     [tooltip/tooltip error (styles/error
+                             (cond bottom-value bottom-value
+                                   label 20
+                                   :else 0))])])

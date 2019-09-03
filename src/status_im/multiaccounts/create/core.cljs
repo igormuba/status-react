@@ -3,6 +3,7 @@
             [re-frame.core :as re-frame]
             [status-im.constants :as constants]
             [status-im.ethereum.core :as ethereum]
+            [status-im.multiaccounts.db :as db]
             [status-im.native-module.core :as status]
             [status-im.node.core :as node]
             [status-im.ui.components.colors :as colors]
@@ -25,8 +26,7 @@
    :select-key-storage   3
    :create-code          4
    :confirm-code         5
-   :enable-fingerprint   6
-   :enable-notifications 7})
+   :enable-notifications 6})
 
 (defn dec-step [step]
   (let [inverted  (map-invert step-kw-to-num)]
@@ -60,6 +60,8 @@
   [{:keys [db] :as cofx} first-time-setup?]
   (fx/merge {:db (assoc db :intro-wizard {:step :generate-key
                                           :weak-password? true
+                                          :back-action :intro-wizard/step-back-pressed
+                                          :forward-action :intro-wizard/step-forward-pressed
                                           :encrypt-with-password? true
                                           :first-time-setup? first-time-setup?})}
             (navigation/navigate-to-cofx :intro-wizard nil)))
@@ -86,7 +88,7 @@
 
 (fx/defn init-key-generation
   [{:keys [db] :as cofx}]
-  {:db (assoc-in db [:intro-wizard :generating-keys?] true)
+  {:db (assoc-in db [:intro-wizard :processing?] true)
    :intro-wizard/start-onboarding nil})
 
 (fx/defn on-confirm-failure [{:keys [db] :as cofx}]
@@ -243,7 +245,7 @@
    {:db (update db :intro-wizard
                 (fn [data]
                   (-> data
-                      (dissoc :generating-keys?)
+                      (dissoc :processing?)
                       (assoc :multiaccounts result
                              :selected-storage-type :default
                              :selected-id (-> result first :id)
@@ -285,7 +287,7 @@
   (let [encrypt-with-password? (get-in db [:intro-wizard :encrypt-with-password?])]
     {:db (update db :intro-wizard assoc :key-code new-key-code
                  :confirm-failure? false
-                 :weak-password? (< (count new-key-code) 6))}))
+                 :weak-password? (not (db/valid-length? new-key-code)))}))
 
 (re-frame/reg-cofx
  ::get-signing-phrase

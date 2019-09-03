@@ -40,6 +40,8 @@
     :on-will-blur
     (fn []
       (reset! screen-focused? false)
+      (log/debug :on-will-blur current-view-id)
+      (re-frame/dispatch [:screens/on-will-blur current-view-id])
       ;; Reset currently mounted text inputs to their default values
       ;; on navigating away; this is a privacy measure
       (doseq [[text-input default-value] @react/text-input-refs]

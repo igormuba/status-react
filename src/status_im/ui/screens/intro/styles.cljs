@@ -5,7 +5,6 @@
 (def intro-view
   {:flex               1
    :justify-content    :flex-end
-   :padding-horizontal 30
    :margin-bottom      12})
 
 (def intro-logo-container
@@ -59,7 +58,7 @@
    :padding-left     16
    :padding-right    10
    :background-color (if selected? colors/blue-light colors/white)
-   :padding-vertical 10})
+   :padding-vertical 12})
 
 (def multiaccount-image
   {:width         40
@@ -82,8 +81,9 @@
    :width      width})
 
 (def buttons-container
-  {:align-items :center
-   :margin-top  32})
+  {:align-items        :center
+   :padding-horizontal 32
+   :margin-top         32})
 
 (def bottom-button
   {:padding-horizontal 24
@@ -101,5 +101,4 @@
    :align-self       :stretch
    :padding-top      16
    :border-top-width 1
-   :border-top-color colors/gray-lighter
-   :margin-right     20})
+   :border-top-color colors/gray-lighter})

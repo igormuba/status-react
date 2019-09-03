@@ -12,6 +12,7 @@
             [status-im.chat.models :as chat]
             [status-im.hardwallet.core :as hardwallet]
             [status-im.mailserver.core :as mailserver]
+            [status-im.multiaccounts.recover.core :as recovery]
             [status-im.native-module.core :as status]
             [status-im.ui.components.permissions :as permissions]
             [status-im.utils.dimensions :as dimensions]
@@ -220,4 +221,29 @@
                 :hardwallet-connect-modal (hardwallet/hardwallet-connect-screen-did-load %)
                 :hardwallet-authentication-method (hardwallet/authentication-method-screen-did-load %)
                 :multiaccounts (hardwallet/multiaccounts-screen-did-load %)
+                (:recover-multiaccount-enter-phrase
+                 :recover-multiaccount-success
+                 :recover-multiaccount-select-storage
+                 :recover-multiaccount-enter-password
+                 :recover-multiaccount-confirm-password)
+                ;; Add a hardware back button listener in Recovery wizard
+                (do
+                  (recovery/add-back-listener)
+                  nil)
+                nil))))
+
+(handlers/register-handler-fx
+ :screens/on-will-blur
+ (fn [{:keys [db] :as cofx} [_ view-id]]
+   (fx/merge cofx
+             #(case view-id
+                (:recover-multiaccount-enter-phrase
+                 :recover-multiaccount-success
+                 :recover-multiaccount-select-storage
+                 :recover-multiaccount-enter-password
+                 :recover-multiaccount-confirm-password)
+                ;; Remove a hardware back button listener in Recovery wizard
+                (do
+                  (recovery/remove-back-listener)
+                  nil)
                 nil))))
