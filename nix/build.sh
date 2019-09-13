@@ -21,12 +21,11 @@ function cleanup() {
   fi
 }
 
-trap cleanup EXIT ERR INT QUIT
+#trap cleanup EXIT ERR INT QUIT
 
 # build output will end up under /nix, we have to extract it
 function extractResults() {
   local nixResultPath="$1"
-  echo "Saving build result: ${nixResultPath}"
   mkdir -p "${resultPath}"
   cp -vfr ${nixResultPath}/* "${resultPath}"
   chmod -R u+w "${resultPath}"
@@ -43,11 +42,13 @@ if [[ -z "${targetAttr}" ]]; then
   exit 1
 fi
 
-# Some defaults flags, --pure could be optional in the future
+# Some defaults flags, --pure could be optional in the future.
+# NOTE: The --keep-failed flag can be used for debugging issues.
 nixOpts=(
   "--pure"
   "--fallback"
   "--no-out-link"
+  "--keep-failed"
   "--show-trace"
   "--argstr target-os ${TARGET_OS}"
   "--attr ${targetAttr}"
@@ -59,6 +60,7 @@ nixOpts=(
 echo "Running: nix-build ${nixOpts[@]}"
 nixResultPath=$(nix-build ${nixOpts[@]})
 
+echo "Extracting result: ${nixResultPath}"
 extractResults "${nixResultPath}"
 
 echo "SUCCESS"

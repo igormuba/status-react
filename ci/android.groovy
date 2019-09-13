@@ -2,21 +2,23 @@ nix = load 'ci/nix.groovy'
 utils = load 'ci/utils.groovy'
 
 def bundle() {
+  /* we use the method because parameter build type does not take e2e into account */
   def btype = utils.getBuildType()
   /* Disable Gradle Daemon https://stackoverflow.com/questions/38710327/jenkins-builds-fail-using-the-gradle-daemon */
   def gradleOpt = "-PbuildUrl='${currentBuild.absoluteUrl}' --console plain "
-  def target = "release"
   /* we don't need x86 for any builds except e2e */
-  env.NDK_ABI_FILTERS="armeabi-v7a;arm64-v8a"
+  env.ANDROID_ABI_INCLUDE="armeabi-v7a;arm64-v8a"
 
+  /* some builds tyes require different architectures */
   switch (btype) {
     case 'e2e':
-      env.NDK_ABI_FILTERS="x86"; break
+      env.ANDROID_ABI_INCLUDE="x86" /* e2e builds are used with simulators */
     case 'release':
+      env.ANDROID_ABI_SPLIT="true"
       gradleOpt += "-PreleaseVersion='${utils.getVersion()}'"
   }
 
-  // The Nix script cannot access the user home directory, so best to copy the file to the Nix store and pass that to the Nix script
+  /* credentials necessary to open the keystore and sign the APK */
   withCredentials([
     string(
       credentialsId: 'android-keystore-pass',
@@ -28,36 +30,75 @@ def bundle() {
       passwordVariable: 'STATUS_RELEASE_KEY_PASSWORD'
     )
   ]) {
+    /* Nix target which produces the final APKs */
     nix.build(
+      attr: 'targets.mobile.android.release',
       args: [
         'gradle-opts': gradleOpt,
         'build-number': utils.readBuildNumber(),
-        'build-type': btype
+        'build-type': btype,
       ],
       safeEnv: [
         'STATUS_RELEASE_KEY_ALIAS',
         'STATUS_RELEASE_STORE_PASSWORD',
-        'STATUS_RELEASE_KEY_PASSWORD'
+        'STATUS_RELEASE_KEY_PASSWORD',
       ],
       keep: [
-        'NDK_ABI_FILTERS',
-        'STATUS_RELEASE_STORE_FILE'
+        'ANDROID_ABI_SPLIT',
+        'ANDROID_ABI_INCLUDE',
+        'STATUS_RELEASE_STORE_FILE',
       ],
       sbox: [
-        env.STATUS_RELEASE_STORE_FILE
+        env.STATUS_RELEASE_STORE_FILE,
       ],
-      attr: 'targets.mobile.android.release',
       link: false
     )
   }
-  /* because nix-build was run in `android` dir that's where `result` is */
-  def outApk = "result/app.apk"
-  def pkg = utils.pkgFilename(btype, 'apk')
-  /* rename for upload */
-  sh "cp ${outApk} ${pkg}"
   /* necessary for Fastlane */
-  env.APK_PATH = pkg
-  return pkg
+  env.APK_PATHS = renameAPKs()
+  /* return only the universal APK */
+  return env.APK_PATHS.find { it.contains('universal') }
+}
+
+/**
+ * We need more informative filenames for all builds.
+ * For more details on the format see utils.pkgFilename().
+ **/
+def renameAPKs() {
+  /* find all APK files */
+  def apkGlob = 'result/*.apk'
+  def found = findFiles(glob: apkGlob)
+  if (found.size() == 0) {
+    error("APKs not found via glob: ${apkGlob}")
+  }
+  def renamed = []
+  def pattern = /app-([^-]*)-release.apk/
+  println "found: ${found}"
+  /* rename each for upload & archiving */
+  for (apk in found) {
+    def arch = extractArchFromAPK(apk)
+    def pkg = utils.pkgFilename(btype, 'apk', arch)
+    println "Arch: ${arch}"
+    println "Pkg: ${pkg}"
+    def newApk = "result/${pkg}"
+    println "newApk: ${newApk}"
+    renamed += newApk
+    println "renamed: ${renamed}"
+    sh "cp ${apk.path} ${newApk}"
+    println "END"
+  }
+  prntln "Renamed: ${renamed}"
+  return renamed
+}
+
+def extractArchFromAPK(String name) {
+  /* extract architecture from filename */
+  def matches = (apk.name =~ pattern)
+  if (matches.size() > 0) {
+    return matches[0][1]
+  }
+  /* non-release builds make universal APKs */
+  return 'universal'
 }
 
 def uploadToPlayStore(type = 'nightly') {
