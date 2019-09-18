@@ -19,7 +19,49 @@
             [status-im.utils.utils :as utils]
             [status-im.constants :as constants]
             [status-im.ui.components.list-item.views :as list-item]
-            [status-im.utils.platform :as platform]))
+            [status-im.utils.platform :as platform]
+            [status-im.react-native.resources :as resources]
+            [status-im.ui.components.icons.vector-icons :as icons]))
+
+(defview custom-seed-phrase []
+  [react/view
+   [react/view {:margin-top 24 :margin-horizontal 24 :align-items :center}
+    [react/view {:background-color colors/blue-light :width 32 :height 32 :border-radius 16
+                 :align-items      :center :justify-content :center}
+     [icons/icon :main-icons/help {:color colors/blue}]]
+    [react/text {:style {:typography    :title-bold
+                         :margin-top    16
+                         :margin-bottom 8}}
+     (i18n/label :t/custom-seed-phrase)]
+    [react/view {:flex-wrap       :wrap
+                 :flex-direction  :row
+                 :justify-content :center
+                 :text-align      :center
+                 :width           320}
+     [react/text {:style {:color       colors/gray
+                          :text-align  :center
+                          :line-height 22}}
+      (i18n/label :t/custom-seed-phrase-text-1)]
+     [react/text {:style {:color       colors/black
+                          :text-align  :center
+                          :line-height 22}}
+      (i18n/label :t/custom-seed-phrase-text-2)]
+     [react/text {:style {:color       colors/gray
+                          :text-align  :center
+                          :line-height 22}}
+      (i18n/label :t/custom-seed-phrase-text-3)]
+     [react/text {:style {:color       colors/black
+                          :text-align  :center
+                          :line-height 22}}
+      (i18n/label :t/custom-seed-phrase-text-4)]]
+    [react/view {:margin-bottom 24 :margin-horizontal 24 :align-items :center}
+     [components.common/button {:on-press     #(re-frame/dispatch [::multiaccounts.recover/continue-pressed])
+                                :button-style {:margin-top 24}
+                                :label        (i18n/label :t/continue)}]
+     [components.common/button {:on-press     #(re-frame/dispatch [:hide-popover])
+                                :button-style {:margin-top 24}
+                                :background?  false
+                                :label        (i18n/label :t/cancel)}]]]])
 
 (defn bottom-sheet-view []
   [react/view {:flex 1 :flex-direction :row}
@@ -37,7 +79,16 @@
         :title               :t/recover-with-keycard
         :disabled?           (not config/hardwallet-enabled?)
         :accessibility-label :recover-with-keycard-button
-        :icon                :main-icons/keycard-logo
+        :icon                [react/view {:border-width     1
+                                          :border-radius    20
+                                          :border-color     colors/blue-light
+                                          :background-color colors/blue-light
+                                          :justify-content  :center
+                                          :align-items      :center
+                                          :width            40
+                                          :height           40}
+                              [react/image {:source (resources/get-image :keycard-logo-blue)
+                                            :style  {:width 24 :height 24}}]]
         :on-press            #(re-frame/dispatch [::hardwallet/recover-with-keycard-pressed])}])]])
 
 (def bottom-sheet
