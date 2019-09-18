@@ -14,11 +14,13 @@
             [status-im.mailserver.core :as mailserver]
             [status-im.multiaccounts.recover.core :as recovery]
             [status-im.native-module.core :as status]
+            [status-im.react-native.js-dependencies :as js-dependencies]
             [status-im.ui.components.permissions :as permissions]
             [status-im.utils.dimensions :as dimensions]
             [status-im.utils.fx :as fx]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.http :as http]
+            [status-im.utils.platform :as platform]
             [status-im.utils.utils :as utils]
             [status-im.i18n :as i18n]
             [status-im.biometric-auth.core :as biometric-auth]
@@ -202,6 +204,36 @@
  (fn [{:keys [db]} [_ enabled?]]
    {:db (assoc db :two-pane-ui-enabled? enabled?)}))
 
+;; This counter is used
+;; to fix a problem when navigating
+;; back in a wizard invokes on-will-focus first,
+;; and then on-will-blur, which might cause the listener
+;; to be removed altogether
+(def add-counter (atom 0))
+
+(handlers/register-handler-fx
+ :screens/wizard-back-pressed
+ (fn [{:keys [db] :as cofx} _]
+   (when (:hardware-back-action db)
+     (re-frame/dispatch [(:hardware-back-action db)]))))
+
+(defn wizard-back-button-listener []
+  (re-frame/dispatch [:screens/wizard-back-pressed])
+  ;; Return true so that RN considers back button press handled
+  true)
+
+(defn add-wizard-back-listener []
+  (swap! add-counter inc)
+  (when (= 1 @add-counter)
+    (.addEventListener js-dependencies/back-handler "hardwareBackPress"
+                       wizard-back-button-listener)))
+
+(defn remove-wizard-back-listener []
+  (swap! add-counter dec)
+  (when (= 0 @add-counter)
+    (.removeEventListener js-dependencies/back-handler "hardwareBackPress"
+                          wizard-back-button-listener)))
+
 (handlers/register-handler-fx
  :screens/on-will-focus
  (fn [{:keys [db] :as cofx} [_ view-id]]
@@ -221,14 +253,20 @@
                 :hardwallet-connect-modal (hardwallet/hardwallet-connect-screen-did-load %)
                 :hardwallet-authentication-method (hardwallet/authentication-method-screen-did-load %)
                 :multiaccounts (hardwallet/multiaccounts-screen-did-load %)
-                (:recover-multiaccount-enter-phrase
+                (:create-multiaccount-generate-key
+                 :create-multiaccount-choose-key
+                 :create-multiaccount-select-key-storage
+                 :create-multiaccount-create-code
+                 :create-multiaccount-confirm-code
+                 :create-multiaccount-enable-notifications
+                 :recover-multiaccount-enter-phrase
                  :recover-multiaccount-success
                  :recover-multiaccount-select-storage
                  :recover-multiaccount-enter-password
                  :recover-multiaccount-confirm-password)
-                ;; Add a hardware back button listener in Recovery wizard
-                (do
-                  (recovery/add-back-listener)
+                ;; Add a hardware back button listener in Onboarding wizard
+                (when platform/android?
+                  (add-wizard-back-listener)
                   nil)
                 nil))))
 
@@ -237,13 +275,19 @@
  (fn [{:keys [db] :as cofx} [_ view-id]]
    (fx/merge cofx
              #(case view-id
-                (:recover-multiaccount-enter-phrase
+                (:create-multiaccount-generate-key
+                 :create-multiaccount-choose-key
+                 :create-multiaccount-select-key-storage
+                 :create-multiaccount-create-code
+                 :create-multiaccount-confirm-code
+                 :create-multiaccount-enable-notifications
+                 :recover-multiaccount-enter-phrase
                  :recover-multiaccount-success
                  :recover-multiaccount-select-storage
                  :recover-multiaccount-enter-password
                  :recover-multiaccount-confirm-password)
-                ;; Remove a hardware back button listener in Recovery wizard
-                (do
-                  (recovery/remove-back-listener)
+                 ;; Remove a hardware back button listener in Onboarding wizard
+                (when platform/android?
+                  (remove-wizard-back-listener)
                   nil)
                 nil))))

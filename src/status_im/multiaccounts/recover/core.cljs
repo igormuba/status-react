@@ -8,7 +8,6 @@
             [status-im.multiaccounts.create.core :as multiaccounts.create]
             [status-im.multiaccounts.db :as db]
             [status-im.native-module.core :as status]
-            [status-im.react-native.js-dependencies :as js-dependencies]
             [status-im.ui.screens.navigation :as navigation]
             [status-im.utils.fx :as fx]
             [status-im.utils.security :as security]
@@ -123,7 +122,8 @@
                                              :encrypt-with-password? true
                                              :first-time-setup? false
                                              :back-action :multiaccounts.recover/cancel-pressed
-                                             :forward-action :multiaccounts.recover/enter-phrase-next-pressed})
+                                             :forward-action :multiaccounts.recover/enter-phrase-next-pressed}
+                              :hardware-back-action :multiaccounts.recover/cancel-pressed)
              :dispatch [:bottom-sheet/hide-sheet]}
             (navigation/navigate-to-cofx :recover-multiaccount-enter-phrase nil)))
 
@@ -139,7 +139,8 @@
   {:events [:multiaccounts.recover/dec-step]}
   [{:keys [db] :as cofx}]
   (let [step (get-in db [:intro-wizard :step])]
-    (when-not (= step :enter-phrase)
+    (if (= step :enter-phrase)
+      {:db (dissoc db :intro-wizard :hardware-back-action)}
       {:db (update db :intro-wizard assoc :step
                    (case step
                      :recovery-success :enter-phrase
@@ -149,30 +150,6 @@
                    :confirm-failure? false
                    :key-code nil
                    :weak-password? true)})))
-
-(defn back-button-listener []
-  (re-frame/dispatch [:multiaccounts.recover/cancel-pressed])
-  ;; Return true so that RN considers back button press handled
-  true)
-
-;; This counter is used
-;; to fix a problem when navigating
-;; back in a wizard invokes on-will-focus first,
-;; and then on-will-blur, which might cause the listener
-;; to be removed altogether
-(def add-counter (atom 0))
-
-(defn add-back-listener []
-  (swap! add-counter inc)
-  (when (= 1 @add-counter)
-    (.addEventListener js-dependencies/back-handler "hardwareBackPress"
-                       back-button-listener)))
-
-(defn remove-back-listener []
-  (swap! add-counter dec)
-  (when (= 0 @add-counter)
-    (.removeEventListener js-dependencies/back-handler "hardwareBackPress"
-                          back-button-listener)))
 
 (fx/defn cancel-pressed
   {:events [:multiaccounts.recover/cancel-pressed]}
@@ -221,7 +198,6 @@
   [{:keys [db] :as cofx}]
   (fx/merge cofx
             {:db (assoc-in db [:intro-wizard :stored-key-code] (get-in db [:intro-wizard :key-code]))}
-            #_(validate-password)
             (proceed-to-password-confirm)))
 
 (fx/defn confirm-password-next-button-pressed
@@ -231,6 +207,7 @@
   (let [{:keys [key-code stored-key-code]} (:intro-wizard db)]
     (if (= key-code stored-key-code)
       (fx/merge cofx
+                {:db (dissoc db :intro-wizard :hardware-back-action)}
                 (store-multiaccount)
                 (navigation/navigate-to-cofx :keycard-welcome nil))
       {:db (assoc-in db [:intro-wizard :confirm-failure?] true)})))

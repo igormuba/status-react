@@ -73,6 +73,12 @@
 (def all-screens
   {:login                                            login/login
    :progress                                         progress/progress
+   :create-multiaccount-generate-key                 intro/wizard
+   :create-multiaccount-choose-key                   intro/wizard
+   :create-multiaccount-select-key-storage           intro/wizard
+   :create-multiaccount-create-code                  intro/wizard
+   :create-multiaccount-confirm-code                 intro/wizard
+   :create-multiaccount-enable-notifications         intro/wizard
    :recover-multiaccount-enter-phrase                intro/wizard ;multiaccounts.recover/enter-phrase
    :recover-multiaccount-success                     intro/wizard ;multiaccounts.recover/success
    :recover-multiaccount-select-storage              intro/wizard ;multiaccounts.recover/select-storage
