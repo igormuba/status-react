@@ -14,7 +14,7 @@
 (spec/def :contact/fcm-token (spec/nilable string?))
 (spec/def :contact/last-online (spec/nilable int?))
 (spec/def :contact/last-updated (spec/nilable int?))
-(spec/def :contact/name :global/not-empty-string)
+(spec/def :contact/name (spec/nilable string?))
 (spec/def :contact/public-key :global/not-empty-string)
 (spec/def :contact/photo-path (spec/nilable string?))
 

@@ -1,6 +1,7 @@
 (ns status-im.utils.gfycat.core
   (:require [status-im.utils.gfycat.animals :as animals]
             [status-im.utils.gfycat.adjectives :as adjectives]
+            [status-im.native-module.core :as native-module]
             [clojure.string :as str]
             [status-im.utils.random :as rnd]
             [status-im.utils.datetime :as datetime]))
@@ -11,11 +12,7 @@
 
 (defn- build-gfy
   [public-key]
-  (let [gen               (rnd/rand-gen public-key)
-        first-adjective   (pick-random gen adjectives/data)
-        second-adjective  (pick-random gen adjectives/data)
-        animal            (pick-random gen animals/data)]
-    (str first-adjective " " second-adjective " " animal)))
+  (native-module/generate-gfycat public-key))
 
 (def unknown-gfy "Unknown")
 

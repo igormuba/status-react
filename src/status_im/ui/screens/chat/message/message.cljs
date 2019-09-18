@@ -200,14 +200,16 @@
           (if outgoing-status
             [text-status outgoing-status]))))))
 
-(defview message-author-name [from name]
-  (letsubs [username [:contacts/contact-name-by-identity from]]
-    (chat.utils/format-author from style/message-author-name name)))
+(defview message-author-name [generated-name name]
+  (letsubs [username [:contacts/contact-name-by-identity generated-name]]
+    (chat.utils/format-author generated-name style/message-author-name name)))
 
 (defn message-body
   [{:keys [last-in-group?
            display-photo?
+           generated-name
            display-username?
+           identicon
            from
            outgoing
            modal?
@@ -219,11 +221,11 @@
        (when last-in-group?
          [react/touchable-highlight {:on-press #(when-not modal? (re-frame/dispatch [:chat.ui/show-profile from]))}
           [react/view
-           [photos/member-photo from]]])])
+           [photos/member-photo-2 from identicon]]])])
     [react/view (style/group-message-view outgoing display-photo?)
      (when display-username?
        [react/touchable-opacity {:on-press #(re-frame/dispatch [:chat.ui/show-profile from])}
-        [message-author-name from (:name content)]])
+        [message-author-name generated-name (:name content)]])
      [react/view {:style (style/timestamp-content-wrapper outgoing)}
       child]]]
    [react/view (style/delivery-status outgoing)

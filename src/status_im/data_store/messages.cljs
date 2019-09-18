@@ -52,6 +52,7 @@
           (update-quoted-message)
           (clojure.set/rename-keys {:id :message-id
                                     :whisperTimestamp :whisper-timestamp
+                                    :fromGeneratedName :generated-name
                                     :messageType :message-type
                                     :chatId :chat-id
                                     :contentType  :content-type

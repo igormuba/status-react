@@ -82,6 +82,8 @@
                                        :whisper-timestamp timestamp
                                        :raw-payload-hash (ethereum/sha3
                                                           (.-payload (:js-obj cofx)))
+                                       :generated-name (get-in cofx [:metadata :author :name])
+                                       :identicon (get-in cofx [:metadata :author :identicon])
                                        :from signature
                                        :metadata (:metadata cofx)
                                        :js-obj (:js-obj cofx))]}]

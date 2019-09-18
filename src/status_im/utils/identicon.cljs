@@ -1,5 +1,7 @@
 (ns status-im.utils.identicon
-  (:require [status-im.js-dependencies :as dependencies]))
+  (:require
+   [status-im.native-module.core :as native-module]
+   [status-im.js-dependencies :as dependencies]))
 
 (def default-size 150)
 
@@ -8,8 +10,6 @@
                                     :margin     0.24
                                     :size       default-size})))
   ([hash options]
-   (str "data:image/png;base64,"
-        (let [identicon-js dependencies/identicon-js]
-          (str (new identicon-js hash options))))))
+   (native-module/identicon hash)))
 
 (def identicon-memoized (memoize identicon))

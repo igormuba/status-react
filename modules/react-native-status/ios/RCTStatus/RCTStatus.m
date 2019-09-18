@@ -583,6 +583,14 @@ RCT_EXPORT_METHOD(callRPC:(NSString *)payload
     });
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(generateName:(NSString *)publicKey) {
+  return StatusgoGenerateName(publicKey);
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(identicon:(NSString *)publicKey) {
+  return StatusgoIdenticon(publicKey);
+}
+
 RCT_EXPORT_METHOD(callPrivateRPC:(NSString *)payload
                   callback:(RCTResponseSenderBlock)callback) {
     dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{

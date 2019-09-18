@@ -265,3 +265,12 @@
 
     ;; in unknown scenarios we also consider the device rooted to avoid degrading security
     :else (callback true)))
+
+(defn generate-gfycat
+  [seed]
+  (.generateName (status) seed))
+
+(defn identicon
+  [pk]
+  (.identicon (status) pk))
+

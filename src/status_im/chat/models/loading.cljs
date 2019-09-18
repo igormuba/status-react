@@ -33,11 +33,11 @@
                  (update-in db [:chats chat-id :message-groups datemark]
                             (fn [message-references]
                               (->> grouped-messages
-                                   (map (fn [{:keys [message-id timestamp whisper-timestamp]}]
-                                          {:message-id        message-id
-                                           :timestamp-str     (time/timestamp->time timestamp)
-                                           :timestamp         timestamp
-                                           :whisper-timestamp whisper-timestamp}))
+                                   (mapv (fn [{:keys [message-id timestamp whisper-timestamp]}]
+                                           {:message-id        message-id
+                                            :timestamp-str     "10:20"
+                                            :timestamp         timestamp
+                                            :whisper-timestamp whisper-timestamp}))
                                    (into (or message-references '()))
                                    (sort-references (get-in db [:chats chat-id :messages]))))))
                db
