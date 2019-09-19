@@ -1098,7 +1098,10 @@
     :currency-display-name-usd
     :tribute-to-talk-ask-to-be-added
     :currency-display-name-uah
-    :message-syncing})
+    :message-syncing
+    :status-sent
+    :status-not-sent-click
+    :status-not-sent-tap})
 
 ;; NOTE: the rest checkpoints are based on the previous one, defined
 ;;       like this:
