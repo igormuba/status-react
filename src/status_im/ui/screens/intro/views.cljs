@@ -118,12 +118,13 @@
                                                 :margin-bottom (if (< view-height 600)
                                                                  -20
                                                                  (/ view-height 12))}}
-   (for [acc multiaccounts]
+   (for [[acc accessibility-n] (map vector multiaccounts (range (count multiaccounts)))]
      (let [selected? (= (:id acc) selected-id)
            public-key (get-in acc [:derived constants/path-whisper-keyword :publicKey])]
        ^{:key public-key}
        [react/touchable-highlight
-        {:on-press #(re-frame/dispatch [:intro-wizard/on-key-selected (:id acc)])}
+        {:accessibility-label (keyword (str "select-account-button-" accessibility-n))
+         :on-press #(re-frame/dispatch [:intro-wizard/on-key-selected (:id acc)])}
         [react/view {:style (styles/list-item selected?)}
 
          [react/image {:source      {:uri (identicon/identicon public-key)}
@@ -151,7 +152,8 @@
       [react/text {:style (assoc styles/wizard-text :text-align :left :margin-left 16)}
        (i18n/label type)]]
      [react/touchable-highlight
-      {:on-press #(re-frame/dispatch [:intro-wizard/on-key-storage-selected (if (and config/hardwallet-enabled?
+      {:accessibility-label (keyword (str "select-storage-" type))
+       :on-press #(re-frame/dispatch [:intro-wizard/on-key-storage-selected (if (and config/hardwallet-enabled?
                                                                                      platform/android?) type :default)])}
       [react/view (assoc (styles/list-item selected?)
                          :align-items :flex-start
@@ -208,6 +210,7 @@
 
       [react/text-input {:secure-text-entry true
                          :auto-focus true
+                         :accessibility-label :password-input
                          :text-align :center
                          :placeholder ""
                          :style (styles/password-text-input (- view-width (* 2 horizontal-margin)))
@@ -255,11 +258,13 @@
            [components.common/button {:button-style styles/bottom-button
                                       :on-press     #(re-frame/dispatch
                                                       [forward-action])
+                                      :accessibility-label :onboarding-next-button
                                       :label        (i18n/label label-kw)}])
          (and (#{:create-code :confirm-code} step)
               (not encrypt-with-password?))
          [components.common/button {:button-style styles/bottom-button
                                     :label (i18n/label :t/encrypt-with-password)
+                                    :accessibility-label :encrypt-with-password-button
                                     :on-press #(re-frame/dispatch [:intro-wizard/on-encrypt-with-password-pressed])
                                     :background? false}]
 
@@ -267,6 +272,7 @@
          [react/view {:style styles/bottom-arrow}
           [react/view {:style {:margin-right 10}}
            [components.common/bottom-button {:on-press  #(re-frame/dispatch [forward-action])
+                                             :accessibility-label :onboarding-next-button
                                              :disabled? (or processing?
                                                             (and (= step :create-code) weak-password?)
                                                             (and (= step :enter-phrase) next-button-disabled?))
@@ -274,6 +280,7 @@
    (when (= :enable-notifications step)
      [components.common/button {:button-style (assoc styles/bottom-button :margin-top 20)
                                 :label (i18n/label :t/maybe-later)
+                                :accessibility-label :skip-notifications-button
                                 :on-press #(re-frame/dispatch [forward-action {:skip? true}])
                                 :background? false}])
 
@@ -330,31 +337,31 @@
                 :justify-content :flex-start
                 :align-items    :center}
     [text-input/text-input-with-label
-     {:on-change-text    #(re-frame/dispatch [:multiaccounts.recover/enter-phrase-input-changed (security/mask-data %)])
-      :auto-focus        true
-      :on-submit-editing #(re-frame/dispatch [:multiaccounts.recover/enter-phrase-input-submitted])
-      :error             (when passphrase-error (i18n/label passphrase-error))
-      :placeholder       nil
-      ;:height            120
-      :bottom-value      40
-      :multiline         true
-      :auto-correct      false
-      :keyboard-type     "visible-password"
-      :parent-container  {:flex 1
-                          :align-self :stretch
-                          :justify-content :center
-                          :align-items :center}
-      :container         {:background-color :white
-                          :flex 1
-                          :justify-content :center
-                          :align-items :center}
-      :style             {:background-color :white
-                          :text-align       :center
-                          ;:height 75
-                          :flex 1
-                          :flex-wrap :wrap
-                          :font-size        16
-                          :font-weight      "700"}}]]
+     {:on-change-text      #(re-frame/dispatch [:multiaccounts.recover/enter-phrase-input-changed (security/mask-data %)])
+      :auto-focus          true
+      :on-submit-editing   #(re-frame/dispatch [:multiaccounts.recover/enter-phrase-input-submitted])
+      :error               (when passphrase-error (i18n/label passphrase-error))
+      :accessibility-label :passphrase-input
+      :placeholder         nil
+      :bottom-value        40
+      :multiline           true
+      :auto-correct        false
+      :keyboard-type       "visible-password"
+      :parent-container    {:flex 1
+                            :align-self :stretch
+                            :justify-content :center
+                            :align-items :center}
+      :container           {:background-color :white
+                            :flex 1
+                            :justify-content :center
+                            :align-items :center}
+      :style               {:background-color :white
+                            :text-align       :center
+                            ;:height 75
+                            :flex 1
+                            :flex-wrap :wrap
+                            :font-size        16
+                            :font-weight      "700"}}]]
    [react/view {:align-items :center}
     (when passphrase-word-count
       [react/view {:flex-direction :row
@@ -432,7 +439,6 @@
 (defn intro-wizard [{:keys [step generating-keys?
                             back-action
                             view-width view-height] :as wizard-state}]
-  (log/info "#intro-wizard" wizard-state)
   [react/keyboard-avoiding-view {:style {:flex 1}}
    [toolbar/toolbar
     {:style {:border-bottom-width 0
